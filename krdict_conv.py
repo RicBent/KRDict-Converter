@@ -26,7 +26,7 @@ XML_ZIP_URL = 'https://krdict.korean.go.kr/dicBatchDownload?seq=87'
 
 parser = argparse.ArgumentParser()
 
-available_langs = list(LANG_MAP.keys())
+available_langs = list(LANG_MAP.values())
 available_langs_txt = ', '.join(available_langs)
 
 parser.add_argument('--language', '-l', default='en', help=f'Dictionary target language (default: en, available: all, {available_langs_txt})', nargs='+')
