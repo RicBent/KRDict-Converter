@@ -26,15 +26,29 @@ XML_ZIP_URL = 'https://krdict.korean.go.kr/dicBatchDownload?seq=87'
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--language', '-l', default='en', help='Dictionary target language (default: en)', choices=LANG_MAP.values())
-parser.add_argument('--output', '-o', default=None, help='Output file name (default: krdict_[LANGUAGE].zip)')
+available_langs = list(LANG_MAP.keys())
+available_langs_txt = ', '.join(available_langs)
+
+parser.add_argument('--language', '-l', default='en', help=f'Dictionary target language (default: en, available: all, {available_langs_txt})', nargs='+')
+parser.add_argument('--output', '-o', default='krdict_%LANGUAGE%.zip', help='Output file name (default: krdict_%%LANGUAGE%%.zip)')
 parser.add_argument('--input', '-i', default=XML_ZIP_URL, help='Input url/file name (default: KRDict download URL)')
 parser.add_argument('--cache', '-c', default=None, help='Cache file name, if input is a URL (default: None)')
 
 args = parser.parse_args()
 
 if args.output is None:
-    args.output = f'krdict_{args.language}.zip'
+    args.output = f'krdict_%LANGUAGE%.zip'
+
+langs = args.language
+if langs == ['all']:
+    langs = available_langs
+
+for lang in langs:
+    if lang not in available_langs:
+        parser.error(f'Unknown language: {lang}')
+
+if len(langs) > 1 and not '%LANGUAGE%' in args.output:
+    parser.error('Multiple languages selected, but output file name does not contain %LANGUAGE%')
 
 print_progress_max_len = None
 
@@ -117,10 +131,9 @@ def node_get_feat(node, ignore=False):
 
     return feat
 
-def to_html_list(items, l='ul', item_to_str=lambda x: x):
-    return f'<{l}>' + ''.join(f'<li>{item_to_str(item)}</li>' for item in items) + f'</{l}>'
-
-data = []
+lang_data = {}
+for lang in langs:
+    lang_data[lang] = []
 
 fname_count = len(fnames_sorted)
 
@@ -133,7 +146,6 @@ for i, (fname, _) in enumerate(fnames_sorted):
     parts = fname.split('.')[0].split('_')
     index = int(parts[0])
     assert index == i + 1
-    # part_count = int(parts[1])
 
     tree = ET.parse(input_zip.open(fname))
     root = tree.getroot()
@@ -207,29 +219,28 @@ for i, (fname, _) in enumerate(fnames_sorted):
 
             written_form = lemma['writtenForm']
 
-            definitions = []
-
             senses.sort(key=lambda x: x['id'])
 
             for s in senses:
-                if not args.language in s['equivalents']:
-                    continue
-                eq = s['equivalents'][args.language]
+                eq = s['equivalents']
+                for lang in langs:
+                    try:
+                        lang_eq = eq[lang]
+                    except KeyError:
+                        continue
 
-                d = f'{eq["lemma"]}\n{s["definition"]}\n{eq["definition"]}'
-                definitions.append(d)
-
-            for d in definitions:
-                data.append({
-                    't': written_form,
-                    'd': d,
-                 })
-
-
-z = zipfile.ZipFile(args.output, 'w')
-z.writestr('data.json', json.dumps(data, ensure_ascii=False))
-z.close()
+                    d = f'{lang_eq["lemma"]}\n{s["definition"]}\n{lang_eq["definition"]}'
+                    
+                    lang_data[lang].append({
+                        't': written_form,
+                        'd': d,
+                    })
 
 print_progress(1, 'All done.', done=True)
 
-print(f'Output written to: {args.output}')
+for lang, lang_data in lang_data.items():
+    fname = args.output.replace('%LANGUAGE%', lang)
+    z = zipfile.ZipFile(fname, 'w')
+    z.writestr('data.json', json.dumps(lang_data, ensure_ascii=False))
+    z.close()
+    print(f'Output for {lang} written to: {fname}')
