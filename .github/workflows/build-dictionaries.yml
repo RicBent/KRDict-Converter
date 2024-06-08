@@ -13,7 +13,7 @@ jobs:
           mkdir dist
           pip install -r requirements.txt
           cd dist
-          python krdict_conv.py
+          python ../krdict_conv.py
           cd ..
       - name: Upload Dictionaries
         uses: actions/upload-artifact@v2
