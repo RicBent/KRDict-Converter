@@ -29,10 +29,11 @@ parser = argparse.ArgumentParser()
 available_langs = list(LANG_MAP.values())
 available_langs_txt = ', '.join(available_langs)
 
-parser.add_argument('--language', '-l', default='en', help=f'Dictionary target language (default: en, available: all, {available_langs_txt})', nargs='+')
+parser.add_argument('--language', '-l', default=['en'], help=f'Dictionary target language (default: en, available: all, {available_langs_txt})', nargs='+')
 parser.add_argument('--output', '-o', default='krdict_%LANGUAGE%.zip', help='Output file name (default: krdict_%%LANGUAGE%%.zip)')
 parser.add_argument('--input', '-i', default=XML_ZIP_URL, help='Input url/file name (default: KRDict download URL)')
 parser.add_argument('--cache', '-c', default=None, help='Cache file name, if input is a URL (default: None)')
+parser.add_argument('--noprogress', '-np', dest='no_progress', action='store_true', help='Disable progress bars')
 
 args = parser.parse_args()
 
@@ -44,7 +45,7 @@ if langs == ['all']:
     langs = available_langs
 
 for lang in langs:
-    if lang not in available_langs:
+    if not lang in available_langs:
         parser.error(f'Unknown language: {lang}')
 
 if len(langs) > 1 and not '%LANGUAGE%' in args.output:
@@ -53,6 +54,9 @@ if len(langs) > 1 and not '%LANGUAGE%' in args.output:
 print_progress_max_len = None
 
 def print_progress(progress, text=None, done=False):
+    if args.no_progress:
+        return
+
     global print_progress_max_len
 
     out = f'\r{progress * 100:4.0f}% '
