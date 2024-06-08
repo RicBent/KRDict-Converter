@@ -1,0 +1,23 @@
+name: Build Dictionaries
+on:
+  push:
+    tags:
+      - '*'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build Dictionaries
+        run: |
+          mkdir dist
+          pip install -r requirements.txt
+          cd dist
+          python krdict_conv.py
+          cd ..
+      - name: Upload Dictionaries
+        uses: actions/upload-artifact@v2
+        with:
+          name: dictionaries
+          path: dist
+ 
