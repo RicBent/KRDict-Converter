@@ -26,12 +26,13 @@ XML_ZIP_URL = 'https://krdict.korean.go.kr/dicBatchDownload?seq=87'
 
 parser = argparse.ArgumentParser()
 
-available_langs = list(LANG_MAP.values())
+available_langs = ['ko'] + list(LANG_MAP.values())
 available_langs_txt = ', '.join(available_langs)
 
 parser.add_argument('--language', '-l', default=['en'], help=f'Dictionary target language (default: en, available: all, {available_langs_txt})', nargs='+')
 parser.add_argument('--output', '-o', default='krdict_%LANGUAGE%.zip', help='Output file name (default: krdict_%%LANGUAGE%%.zip)')
 parser.add_argument('--input', '-i', default=XML_ZIP_URL, help='Input url/file name (default: KRDict download URL)')
+parser.add_argument('--bilingual', '-b', dest='bilingual', action='store_true', help='Add Korean definitions to other languages')
 parser.add_argument('--cache', '-c', default=None, help='Cache file name, if input is a URL (default: None)')
 parser.add_argument('--noprogress', '-np', dest='no_progress', action='store_true', help='Disable progress bars')
 
@@ -135,6 +136,7 @@ def node_get_feat(node, ignore=False):
 
     return feat
 
+
 lang_data = {}
 for lang in langs:
     lang_data[lang] = []
@@ -227,17 +229,32 @@ for i, (fname, _) in enumerate(fnames_sorted):
 
             for s in senses:
                 eq = s['equivalents']
+                definition = s['definition']
+
                 for lang in langs:
+                    if lang == 'ko':
+                        lang_data[lang].append({
+                            't': written_form,
+                            'd': definition,
+                        })
+                        continue
+
                     try:
                         lang_eq = eq[lang]
                     except KeyError:
                         continue
 
-                    d = f'{lang_eq["lemma"]}\n{s["definition"]}\n{lang_eq["definition"]}'
+                    parts = [
+                        lang_eq['lemma'],
+                        lang_eq["definition"],
+                    ]
+
+                    if args.bilingual:
+                        parts.append(definition)
                     
                     lang_data[lang].append({
                         't': written_form,
-                        'd': d,
+                        'd': '\n'.join(parts),
                     })
 
 print_progress(1, 'All done.', done=True)

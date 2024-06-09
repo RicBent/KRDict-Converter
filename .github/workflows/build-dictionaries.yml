@@ -13,10 +13,10 @@ jobs:
       - name: Build Dictionaries
         run: |
           mkdir dist
+          mkdir tmp
           pip3 install -r requirements.txt
-          cd dist
-          python3 ../krdict_conv.py -np -l all
-          cd ..
+          python3 krdict_conv.py -np -l all -c tmp/krdict_src.zip -o dist/krdict_%LANGUAGE%.zip
+          python3 krdict_conv.py -np -b -l all -i tmp/krdict_src.zip -o dist/krdict_%LANGUAGE%_bilingual.zip
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "dist/*"
