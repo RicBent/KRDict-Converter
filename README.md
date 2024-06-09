@@ -5,7 +5,7 @@
 This is a simple script to convert [KRDict](https://krdict.korean.go.kr) from the Korean Language Institute into a simple term-definition JSON dictionary for all available languages.
 
 ```
-usage: krdict_conv.py [-h] [--language LANGUAGE [LANGUAGE ...]] [--output OUTPUT] [--input INPUT] [--no-bilingual] [--cache CACHE] [--noprogress]
+usage: krdict_conv.py [-h] [--language LANGUAGE [LANGUAGE ...]] [--output OUTPUT] [--input INPUT] [--bilingual] [--cache CACHE] [--noprogress]
 
 options:
   -h, --help            show this help message and exit
@@ -15,7 +15,7 @@ options:
                         Output file name (default: krdict_%LANGUAGE%.zip)
   --input INPUT, -i INPUT
                         Input url/file name (default: KRDict download URL)
-  --no-bilingual, -nb   Do not add Korean definitions to other languages
+  --bilingual, -b       Add Korean definitions to other languages
   --cache CACHE, -c CACHE
                         Cache file name, if input is a URL (default: None)
   --noprogress, -np     Disable progress bars
