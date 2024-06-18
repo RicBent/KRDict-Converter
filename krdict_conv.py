@@ -225,6 +225,11 @@ for i, (fname, _) in enumerate(fnames_sorted):
 
             written_form = lemma['writtenForm']
 
+            if written_form.startswith('-'):
+                written_form = written_form[1:]
+            if written_form.endswith('-'):
+                written_form = written_form[:-1]
+
             senses.sort(key=lambda x: x['id'])
 
             for s in senses:
